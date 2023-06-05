@@ -6,23 +6,47 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import React, { useLayoutEffect } from "react";
-import { useNavigation } from "@react-navigation/native";
+import React, { useEffect, useLayoutEffect, useState } from "react";
+
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useVerifyUserOtpMutation } from "../slices/userApiSlice";
+import { useDispatch } from "react-redux";
+import { setUserTokenInfo } from "../slices/authSlice";
 
-import { AntDesign, EvilIcons, Feather } from "@expo/vector-icons";
+const ConfirmOtp = ({ navigation, route }) => {
+  // const navigation = useNavigation();
 
-const ConfirmOtp = () => {
-  const navigation = useNavigation();
+  const [verifyOtp, { isLoading }] = useVerifyUserOtpMutation();
+  const dispatch = useDispatch();
+  const [signupOtp, setOtp] = useState("");
+
+  const { otpToken, verifyType } = route.params;
 
   useLayoutEffect(() => {
+    console.log(otpToken, "confirm");
     navigation.setOptions({
       headerShown: false,
     });
   }, []);
 
-  const handlePress = () => {
-    navigation.navigate("HomeScreen"); // Replace 'AnotherScreen' with the name of the screen you want to navigate to
+  const onSubmit = async () => {
+    console.log(otpToken, signupOtp, verifyType);
+    if (signupOtp) {
+      try {
+        const res = await verifyOtp({
+          otpToken,
+          signupOtp,
+          verifyType,
+        }).unwrap();
+        console.log(res);
+        if (res.statusCode == 200) {
+          dispatch(setUserTokenInfo({ ...res }));
+          navigation.navigate("HomeScreen");
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
   };
 
   return (
@@ -42,11 +66,13 @@ const ConfirmOtp = () => {
               className=" items-center w-full p-2 h-16 text-lg border-2 border-solid"
               placeholder="Enter your 6 digit otp"
               keyboardType="phone-pad"
+              value={signupOtp}
+              onChangeText={(text) => setOtp(text)}
             />
           </View>
           <Text className="text-sm pb-3">Resend OTP in 30 Seconds</Text>
           <TouchableOpacity
-            onPress={handlePress}
+            onPress={onSubmit}
             className="flex-row justify-center items-center block rounded-md bg-black w-36 py-3 text-center text-sm font-normal text-white shadow-sm"
           >
             <Text className="text-white text-lg font-medium text-center">

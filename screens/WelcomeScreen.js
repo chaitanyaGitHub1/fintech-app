@@ -10,6 +10,10 @@ const WelcomeScreen = () => {
     navigation.navigate("MobileLogin"); // Replace 'AnotherScreen' with the name of the screen you want to navigate to
   };
 
+  const handleRegistration = () => {
+    navigation.navigate("UserRegister"); // Replace 'AnotherScreen' with the name of the screen you want to navigate to
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -37,10 +41,10 @@ const WelcomeScreen = () => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity className="flex-row justify-center items-center block w-full rounded-md bg-black py-3 text-center text-sm font-normal text-white shadow-sm">
-            <AntDesign name="google" size={24} color="white" />
+          <TouchableOpacity className="flex-row justify-center items-center block w-full rounded-md bg-black py-3 text-center text-sm font-normal text-white shadow-sm"  onPress={handleRegistration}>
+            <AntDesign name="user" size={24} color="white" />
             <Text className="text-white text-lg  pl-8  font-medium text-center">
-              Login with Google
+             Register as a new user
             </Text>
           </TouchableOpacity>
         </View>

@@ -15,8 +15,13 @@ import { useForm, Controller } from "react-hook-form";
 import * as ImagePicker from "expo-image-picker";
 import { Entypo } from "@expo/vector-icons";
 import { Picker } from "@react-native-picker/picker";
+import { useUploadImageMutation } from "../slices/serviceApiSlice";
 
 const AddMortgage = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [uploadImage, { isLoading }] = useUploadImageMutation();
+
   const navigation = useNavigation();
   //   const [showPlaceholder, setShowPlaceholder] = useState(true);
   const {
@@ -39,20 +44,41 @@ const AddMortgage = () => {
 
   const [image, setImage] = useState(null);
 
-  const pickImage = async () => {
+  const handlePickAndUpload = async () => {
     // No permissions request is necessary for launching the image library
-    let result = await ImagePicker.launchImageLibraryAsync({
+
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (permissionResult.granted === false) {
+      Alert.alert("Permission to access camera roll is required!");
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
       aspect: [4, 3],
       quality: 1,
     });
 
-    console.log(result);
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+    if (!pickerResult.canceled) {
+      setSelectedImage(pickerResult.uri);
+    } else {
+      return;
     }
+
+    uploadImage(pickerResult.uri)
+      .unwrap()
+      .then((response) => {
+        // Handle successful image upload
+        console.log("Image upload successful:", response);
+        setUploadedImageUrl(response.url);
+      })
+      .catch((error) => {
+        // Handle image upload error
+        console.error("Image upload error:", error);
+      });
   };
 
   return (
@@ -62,11 +88,17 @@ const AddMortgage = () => {
           <Text className="pb-3">Add item image</Text>
           <View className="flex flex-row gap-3 items-start">
             <TouchableOpacity
-              onPress={pickImage}
+              onPress={handlePickAndUpload}
               className="flex justify-center items-center border-dashed border-2 border-black  bg-white h-32 w-24 p-2 text-center"
             >
               <Entypo name="plus" size={44} color="black" />
             </TouchableOpacity>
+            {uploadedImageUrl && (
+              <Image
+                source={{ uri: uploadedImageUrl }}
+                style={{ width: 200, height: 200 }}
+              />
+            )}
             <View>
               {image && (
                 <Image
